@@ -17,7 +17,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.video_processor import SmartVideoProcessor
 from src.angle_analyzer import AngleAnalyzer
 from src.feature_extractor import FeatureExtractor
-from app.gui_components import VideoDisplay, ControlPanel, InfoPanel
+from app.gui import VideoDisplay, ControlPanel, InfoPanel
 
 class VideoAnalyzerApp(QMainWindow):
     def __init__(self):
