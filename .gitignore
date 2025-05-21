@@ -1,0 +1,11 @@
+# Ignore Python virtual environments
+venv/
+venv310/
+env/
+ENV/
+.venv/
+.venv310/
+.pyenv/
+*.pyc
+__pycache__/
+.dataset_raw/

@@ -186,6 +186,119 @@ class SmartVideoProcessor:
             except Exception as e:
                 print(f"Error procesando {video_path.name}: {str(e)}")
                 self.update_processing_log(video_path, status="error")
+    def draw_landmarks(self, frame, landmarks_dict):
+        """Dibuja los landmarks detectados en el frame."""
+        if not landmarks_dict:
+            return frame
+            
+        # Crear una copia del frame para no modificar el original
+        frame_with_landmarks = frame.copy()
+        
+        # Colores para dibujar (BGR)
+        color_landmark = (0, 255, 0)  # Verde para landmarks
+        color_connection = (255, 255, 0)  # Amarillo para conexiones
+        
+        # Dibujar landmarks
+        for joint, data in landmarks_dict.items():
+            if joint in self.key_joints:
+                # Obtener coordenadas normalizadas
+                x, y = data['x'], data['y']
+                
+                # Convertir a coordenadas de pixeles
+                h, w = frame.shape[:2]
+                px, py = int(x * w), int(y * h)
+                
+                # Dibujar círculo en la posición del landmark
+                cv2.circle(frame_with_landmarks, (px, py), 5, color_landmark, -1)
+                
+                # Dibujar etiqueta
+                cv2.putText(frame_with_landmarks, joint, (px, py - 10),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        
+        # Dibujar conexiones entre landmarks
+        connections = [
+            ('LEFT_HIP', 'LEFT_KNEE'), ('LEFT_KNEE', 'LEFT_ANKLE'),
+            ('RIGHT_HIP', 'RIGHT_KNEE'), ('RIGHT_KNEE', 'RIGHT_ANKLE'),
+            ('LEFT_SHOULDER', 'LEFT_HIP'), ('RIGHT_SHOULDER', 'RIGHT_HIP'),
+            ('LEFT_SHOULDER', 'RIGHT_SHOULDER'), ('LEFT_HIP', 'RIGHT_HIP')
+        ]
+        
+        for start_joint, end_joint in connections:
+            if start_joint in landmarks_dict and end_joint in landmarks_dict:
+                # Obtener coordenadas normalizadas
+                x1, y1 = landmarks_dict[start_joint]['x'], landmarks_dict[start_joint]['y']
+                x2, y2 = landmarks_dict[end_joint]['x'], landmarks_dict[end_joint]['y']
+                
+                # Convertir a coordenadas de pixeles
+                h, w = frame.shape[:2]
+                px1, py1 = int(x1 * w), int(y1 * h)
+                px2, py2 = int(x2 * w), int(y2 * h)
+                
+                # Dibujar línea entre landmarks
+                cv2.line(frame_with_landmarks, (px1, py1), (px2, py2), color_connection, 2)
+        
+        return frame_with_landmarks
+
+    def draw_angles(self, frame, landmarks_dict, angles):
+        """Dibuja ángulos articulares en el frame."""
+        if not landmarks_dict or not angles:
+            return frame
+            
+        # Crear una copia del frame para no modificar el original
+        frame_with_angles = frame.copy()
+        
+        # Dibujar ángulos de rodillas
+        for side in ['LEFT', 'RIGHT']:
+            if f'{side}_KNEE_ANGLE' in angles and f'{side}_KNEE' in landmarks_dict:
+                # Obtener valor del ángulo
+                angle_value = angles[f'{side}_KNEE_ANGLE']
+                
+                # Obtener coordenadas de la rodilla
+                x, y = landmarks_dict[f'{side}_KNEE']['x'], landmarks_dict[f'{side}_KNEE']['y']
+                
+                # Convertir a coordenadas de pixeles
+                h, w = frame.shape[:2]
+                px, py = int(x * w), int(y * h)
+                
+                # Determinar color basado en el ángulo (verde si está en rango normal)
+                if 160 <= angle_value <= 180:  # Pierna recta
+                    color = (0, 255, 0)  # Verde
+                elif 70 <= angle_value < 160:  # Pierna flexionada normalmente
+                    color = (255, 255, 0)  # Amarillo
+                else:  # Flexión excesiva o valor inusual
+                    color = (0, 0, 255)  # Rojo
+                
+                # Dibujar texto con el valor del ángulo
+                text = f"{angle_value:.1f}°"
+                cv2.putText(frame_with_angles, text, (px + 10, py),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+        
+        # Dibujar inclinación del tronco si está disponible
+        if 'TRUNK_TILT' in angles:
+            # Determinar posición para mostrar la inclinación
+            if 'NOSE' in landmarks_dict:
+                x, y = landmarks_dict['NOSE']['x'], landmarks_dict['NOSE']['y']
+                h, w = frame.shape[:2]
+                px, py = int(x * w), int(y * h) - 30
+            else:
+                px, py = 50, 50
+            
+            tilt_value = angles['TRUNK_TILT']
+            
+            # Determinar color basado en la inclinación
+            if abs(90 - tilt_value) < 10:  # Casi vertical
+                color = (0, 255, 0)  # Verde
+            elif abs(90 - tilt_value) < 20:  # Ligera inclinación
+                color = (255, 255, 0)  # Amarillo
+            else:  # Inclinación significativa
+                color = (0, 0, 255)  # Rojo
+            
+            # Dibujar texto con el valor de inclinación
+            text = f"Tronco: {tilt_value:.1f}°"
+            cv2.putText(frame_with_angles, text, (px, py),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+        
+        return frame_with_angles
 
 if __name__ == "__main__":
     processor = SmartVideoProcessor()
