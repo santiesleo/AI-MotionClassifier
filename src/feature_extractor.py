@@ -178,6 +178,66 @@ class FeatureExtractor:
                 print(f"- {invalid_file}")
         
         return df_clean
+    def extract_features(self, landmarks_dict):
+        """Extrae características de un diccionario de landmarks en tiempo real."""
+        if not landmarks_dict:
+            return None
+        
+        # Verificar si hay landmarks suficientes
+        required_landmarks = ['LEFT_HIP', 'RIGHT_HIP', 'LEFT_KNEE', 'RIGHT_KNEE']
+        if not all(key in landmarks_dict for key in required_landmarks):
+            return None
+        
+        features = {}
+        
+        # Calcular ángulos de rodilla
+        left_knee_angle = self.calculate_angle(
+            landmarks_dict.get('LEFT_HIP', {}), 
+            landmarks_dict.get('LEFT_KNEE', {}), 
+            landmarks_dict.get('LEFT_ANKLE', {})
+        )
+        
+        right_knee_angle = self.calculate_angle(
+            landmarks_dict.get('RIGHT_HIP', {}), 
+            landmarks_dict.get('RIGHT_KNEE', {}), 
+            landmarks_dict.get('RIGHT_ANKLE', {})
+        )
+        
+        # Extraer posiciones de las articulaciones con valores por defecto
+        features['LEFT_KNEE_ANGLE'] = float(left_knee_angle) if left_knee_angle is not None else 0.0
+        features['RIGHT_KNEE_ANGLE'] = float(right_knee_angle) if right_knee_angle is not None else 0.0
+        features['LEFT_WRIST_X'] = float(landmarks_dict.get('LEFT_WRIST', {}).get('x', 0))
+        features['RIGHT_WRIST_X'] = float(landmarks_dict.get('RIGHT_WRIST', {}).get('x', 0))
+        features['LEFT_SHOULDER_X'] = float(landmarks_dict.get('LEFT_SHOULDER', {}).get('x', 0))
+        features['RIGHT_SHOULDER_X'] = float(landmarks_dict.get('RIGHT_SHOULDER', {}).get('x', 0))
+        features['NOSE_X'] = float(landmarks_dict.get('NOSE', {}).get('x', 0))
+        
+        # Calcular inclinación lateral
+        left_shoulder_x = landmarks_dict.get('LEFT_SHOULDER', {}).get('x')
+        right_shoulder_x = landmarks_dict.get('RIGHT_SHOULDER', {}).get('x')
+        left_hip_x = landmarks_dict.get('LEFT_HIP', {}).get('x')
+        right_hip_x = landmarks_dict.get('RIGHT_HIP', {}).get('x')
+        
+        lateral_inclination = self.calculate_lateral_inclination(
+            left_shoulder_x, right_shoulder_x, left_hip_x, right_hip_x)
+        features['LATERAL_INCLINATION'] = float(lateral_inclination) if lateral_inclination is not None else 0.0
+        
+        # Por ahora no calculamos velocidades en tiempo real (requiere historial)
+        features['LEFT_WRIST_VELOCITY'] = 0.0
+        features['RIGHT_WRIST_VELOCITY'] = 0.0
+        
+        # Definir el orden exacto de características como se usó en el entrenamiento
+        feature_order = [
+            'LEFT_KNEE_ANGLE', 'RIGHT_KNEE_ANGLE', 'LEFT_WRIST_X', 'RIGHT_WRIST_X',
+            'LEFT_SHOULDER_X', 'RIGHT_SHOULDER_X', 'NOSE_X', 'LATERAL_INCLINATION',
+            'LEFT_WRIST_VELOCITY', 'RIGHT_WRIST_VELOCITY'
+        ]
+        
+        # **CAMBIO PRINCIPAL: Devolver DataFrame en lugar de array**
+        import pandas as pd
+        features_df = pd.DataFrame([features])[feature_order]  # Asegurar orden correcto
+        
+        return features_df
     
     def load_features(self) -> pd.DataFrame:
         """Load extracted features from CSV file if it exists."""
