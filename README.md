@@ -1,4 +1,4 @@
-# Video Annotation System for Physical Activity Analysis
+![image](https://github.com/user-attachments/assets/2b5a90be-a20a-449f-93d7-30b19c3936b2)# Video Annotation System for Physical Activity Analysis
 
 **Authors:**
 - Alejandro Amu García  
@@ -128,6 +128,22 @@ Use `gui.py` for an interactive interface.
 | `gui.py`            | Provides a graphical interface to interact with the system. Allows users to load videos, visualize results, and perform analyses             |
 
 ---
+
+## System Diagrams
+
+## System Architecture
+
+![Captura de pantalla 2025-06-06 224301](https://github.com/user-attachments/assets/23af100d-9965-4ce7-9a03-cf843fb9ae6b)
+
+## Real-Time Detection PipeLine
+
+![Captura de pantalla 2025-06-06 224335](https://github.com/user-attachments/assets/e92b2daa-962a-4cbc-a17e-73ab897e0820)
+
+## Data Processing Pipeline
+
+![Captura de pantalla 2025-06-06 224351](https://github.com/user-attachments/assets/f4a8b10d-36d8-4735-a619-6b3d2e7d623d)
+
+
 
 ## 📈 Conclusions and Reflection
 
