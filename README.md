@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/2b5a90be-a20a-449f-93d7-30b19c3936b2)# Video Annotation System for Physical Activity Analysis
+# Video Annotation System for Physical Activity Analysis
 
 **Authors:**
 - Alejandro Amu García  
